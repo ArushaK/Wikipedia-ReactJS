@@ -1,12 +1,22 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
+import "react-dates/initialize";
+import { DateRangePicker } from "react-dates";
+import "react-dates/lib/css/_datepicker.css";
+
 const Dashboard = () => {
   const [search, setSearch] = useState("");
   const [results, setResults] = useState([]);
   const [searchInLastOneDay, setSearchInLastOneDay] = useState(0);
   const [searchInLastOneHour, setSearchInLastOneHour] = useState(0);
   const [searchInfo, setSearchInfo] = useState({});
+
+  //Date range states
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [focusedInput, setFocusedInput] = useState(null);
+
   let [searchData, setSearchData] = useState({
     searchText: "",
     time: null,
@@ -44,7 +54,6 @@ const Dashboard = () => {
       console.log(err);
     }
   };
-
   const searchesInLastOneHour = async (e) => {
     e.preventDefault();
     try {
@@ -55,7 +64,29 @@ const Dashboard = () => {
       console.log(err);
     }
   };
+  const searchesInnDays = async (e) => {
+    e.preventDefault();
+    try {
+      var dateStart = new Date(startDate);
+      var dateEnd = new Date(endDate);
 
+      var dS = dateStart.getDate();
+      var mS = dateStart.getMonth() + 1;
+      var yS = dateStart.getFullYear();
+      var dE = dateEnd.getDate();
+      var mE = dateEnd.getMonth() + 1;
+      var yE = dateEnd.getFullYear();
+      var sendStartDate = yS + "-" + mS + "-" + dS;
+      var sendEndDate = yE + "-" + mE + "-" + dE;
+      const res = await axios.get(
+        `http://localhost:8800/searchesInnDays/${sendStartDate}&${sendEndDate}`
+      );
+      setSearchInLastOneHour(res.data.length);
+      console.log(res.data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
   const handleSearch = async (e) => {
     e.preventDefault();
     console.log("1---------");
@@ -104,6 +135,26 @@ const Dashboard = () => {
         No. of searches performed in last 1 Hour
       </button>
       <h3>{searchInLastOneHour}</h3>
+      <DateRangePicker
+        startDate={startDate}
+        startDateId="s_id"
+        endDate={endDate}
+        endDateId="e_id"
+        onDatesChange={({ startDate, endDate }) => {
+          setStartDate(startDate);
+          setEndDate(endDate);
+        }}
+        focusedInput={focusedInput}
+        onFocusChange={(e) => setFocusedInput(e)}
+        displayFormat="DD/MM/YYYY"
+      />
+      <div className="mt-3 mb-1">
+        Start Date: {startDate && startDate.format("ll")}
+      </div>
+      <div>End Date: {endDate && endDate.format("ll")}</div>
+      <button type="submit" onClick={searchesInnDays}>
+        Get Search Data
+      </button>
       <div className="results">
         {results.map((result, i) => {
           const url = `https://en.wikipedia.org/?curid=${result.pageid}`;

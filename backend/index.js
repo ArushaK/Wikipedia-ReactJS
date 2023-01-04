@@ -41,6 +41,18 @@ app.get("/searchForLastHour", (req, res) => {
   });
 });
 
+app.get("/searchesInnDays/:one&:two", (req, res) => {
+  console.log(req.params.one, req.params.two);
+  const q = `SELECT * FROM SearchInfo where Date(time) BETWEEN '${req.params.one}' AND '${req.params.two}'`;
+  db.query(q, (err, data) => {
+    if (err) {
+      console.log(err);
+      return res.json(err);
+    }
+    return res.json(data);
+  });
+});
+
 app.post("/search", (req, res) => {
   const searchText = req.body.searchText;
   const time = req.body.time;
